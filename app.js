@@ -3,13 +3,7 @@ dotenv.config();
 import { Server } from "socket.io";
 const BASE_URL = process.env.BASE_URL;
 
-const io = new Server({
-  cors: {
-    origin: BASE_URL,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'], 
-    credentials: true,
-  },
-});
+const io = new Server();
 
 const PORT = process.env.PORT;
 
