@@ -1,11 +1,19 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import { Server } from "socket.io";
-const BASE_URL = process.env.BASE_URL;
 
-const io = new Server();
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
+const BASE_URL = process.env.BASE_URL || "*"; 
+const httpServer = createServer();
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: BASE_URL,
+    methods: ["GET", "POST"]
+  }
+});
 
 let onlineUser = [];
 
@@ -25,19 +33,26 @@ const getUser = (userId) => {
 };
 
 io.on("connection", (socket) => {
+  console.log(`🔌 New client connected: ${socket.id}`);
+
   socket.on("newUser", (userId) => {
     addUser(userId, socket.id);
+    console.log("User connected:", onlineUser);
   });
 
   socket.on("sendMessage", ({ receiverId, data }) => {
     const receiver = getUser(receiverId);
-    if(receiver.socketId)
-    io.to(receiver.socketId).emit("getMessage", data);
+    if (receiver?.socketId) {
+      io.to(receiver.socketId).emit("getMessage", data);
+    }
   });
 
   socket.on("disconnect", () => {
     removeUser(socket.id);
+    console.log(`Client disconnected: ${socket.id}`);
   });
 });
 
-io.listen(PORT);
+httpServer.listen(PORT, () => {
+  console.log(`Socket.IO server running on port ${PORT}`);
+});
